@@ -8,33 +8,25 @@ on:
 
 jobs:
   ci:
-    name: Build & Test
+    name: Build Docker Image
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout del repositorio
         uses: actions/checkout@v4
 
-      - name: Configurar Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-
-      - name: Instalar dependencias
-        run: npm ci
-
-      - name: Validar tipos y linter
-        run: npm run lint --if-present
-
-      - name: Compilar proyecto
-        run: npm run build
+      - name: Validar construcción de la imagen Nginx
+        run: docker build -t front-tics:latest .
 
   cd:
     name: Deploy
     needs: ci
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
+
+    steps:
+      - name: Despliegue automático
+        run: echo 
 
     steps:
       - name: Despliegue automático
