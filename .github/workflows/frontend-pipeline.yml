@@ -15,7 +15,7 @@ jobs:
       - name: Checkout del repositorio
         uses: actions/checkout@v4
 
-      - name: Validar construcción de la imagen Nginx
+      - name: Validar construccion de imagen Nginx
         run: docker build -t front-tics:latest .
 
   cd:
@@ -25,10 +25,5 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Despliegue automático
-        run: echo 
-
-    steps:
-      - name: Despliegue automático
-        run: |
-          
+      - name: Despliegue automatico
+        run: echo "Despliegue automatico de la imagen Nginx en el servidor remoto"
