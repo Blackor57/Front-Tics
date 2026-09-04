@@ -7,7 +7,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 45000,
+  timeout: 180000, // 180 segundos (3 minutos)
 });
 
 // Interceptor to inject JWT token
@@ -55,11 +55,17 @@ export const authAPI = {
 // --- INTELLIGENCE / ANALYZER API ---
 export const intelligenceAPI = {
   analyze: async (payload) => {
-    const response = await api.post('/api/v1/intelligence/analyze', {
-      url: payload.url,
-      guardar_snapshot: payload.guardar_snapshot ?? true,
-      generar_documentos: payload.generar_documentos ?? true,
-    });
+    const response = await api.post(
+      '/api/v1/intelligence/analyze',
+      {
+        url: payload.url,
+        guardar_snapshot: payload.guardar_snapshot ?? true,
+        generar_documentos: payload.generar_documentos ?? true,
+      },
+      {
+        timeout: 180000, // 180 segundos (3 minutos) para scraping e inferencia LLM
+      }
+    );
     return response.data;
   },
 };
