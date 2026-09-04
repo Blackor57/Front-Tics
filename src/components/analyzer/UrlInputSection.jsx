@@ -1,0 +1,179 @@
+import React, { useState } from 'react';
+import {
+  Link as LinkIcon,
+  Sparkles,
+  SlidersHorizontal,
+  ChevronUp,
+  FileCheck2,
+  Database,
+  ArrowRight,
+  Zap,
+} from 'lucide-react';
+
+export const UrlInputSection = ({
+  url,
+  setUrl,
+  guardarSnapshot,
+  setGuardarSnapshot,
+  generarDocumentos,
+  setGenerarDocumentos,
+  onAnalyze,
+  onLoadSample,
+  isLoading,
+}) => {
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
+  const presetUrls = [
+    { label: 'RPP Noticias', url: 'https://rpp.pe/politica-y-economia' },
+    { label: 'El Comercio Economía', url: 'https://elcomercio.pe/economia' },
+    { label: 'Normas Legales El Peruano', url: 'https://busquedas.elperuano.pe/normaslegales/' },
+  ];
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (url.trim() && !isLoading) {
+      onAnalyze();
+    }
+  };
+
+  return (
+    <div className="w-full max-w-4xl mx-auto space-y-4">
+      {/* Hero headline */}
+      <div className="text-center space-y-2 pt-2 pb-1">
+        <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-semibold bg-brand-50 dark:bg-brand-950/80 text-brand-700 dark:text-brand-300 border border-brand-200/80 dark:border-brand-800 shadow-sm">
+          <Sparkles className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
+          <span>Scraping Universal + Detección Temporal + Ollama Llama 3.1</span>
+        </div>
+        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+          Inteligencia Web y Detección de Cambios
+        </h1>
+        <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+          Monitorea cualquier portal, extrae novedades críticas en segundos, sintetiza con IA local y
+          descarga informes ejecutivos automáticos.
+        </p>
+      </div>
+
+      {/* Main Input Form */}
+      <form onSubmit={handleSubmit} className="relative">
+        <div className="relative flex flex-col sm:flex-row items-center p-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl dark:shadow-2xl focus-within:border-brand-500 dark:focus-within:border-brand-500 focus-within:ring-4 focus-within:ring-brand-500/10 transition-all">
+          <div className="relative flex-1 w-full flex items-center pl-3 pr-2 py-1">
+            <LinkIcon className="w-5 h-5 text-slate-400 shrink-0 mr-2" />
+            <input
+              type="url"
+              required
+              disabled={isLoading}
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="Pega cualquier URL pública (ej. https://rpp.pe/politica-y-economia)..."
+              className="w-full text-sm sm:text-base bg-transparent border-0 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-0"
+            />
+          </div>
+
+          <div className="flex items-center space-x-2 w-full sm:w-auto mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800">
+            <button
+              type="button"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="p-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              title="Opciones avanzadas"
+            >
+              <SlidersHorizontal className="w-4 h-4" />
+            </button>
+
+            <button
+              type="submit"
+              disabled={isLoading || !url.trim()}
+              className="flex-1 sm:flex-none flex items-center justify-center space-x-2 px-6 py-3 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-brand-600 via-indigo-600 to-brand-700 hover:from-brand-500 hover:to-indigo-500 shadow-md hover:shadow-glow-indigo transition-all disabled:opacity-50 disabled:cursor-not-allowed group cursor-pointer"
+            >
+              <Zap className="w-4 h-4 group-hover:scale-110 transition-transform" />
+              <span>Auditar con Inteligencia Artificial</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+            </button>
+          </div>
+        </div>
+
+        {/* Advanced Options Drawer */}
+        {showAdvanced && (
+          <div className="mt-3 p-4 rounded-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200 dark:border-slate-800 shadow-lg animate-in fade-in zoom-in-95 text-xs text-slate-600 dark:text-slate-300">
+            <div className="flex items-center justify-between font-semibold text-slate-900 dark:text-white mb-2">
+              <span className="flex items-center space-x-1.5">
+                <SlidersHorizontal className="w-3.5 h-3.5 text-brand-500" />
+                <span>Parámetros de Pipeline de Scraping</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowAdvanced(false)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-white"
+              >
+                <ChevronUp className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <label className="flex items-center space-x-2.5 p-2 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-brand-400 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={guardarSnapshot}
+                  onChange={(e) => setGuardarSnapshot(e.target.checked)}
+                  className="rounded text-brand-600 focus:ring-brand-500 dark:bg-slate-700"
+                />
+                <Database className="w-4 h-4 text-brand-500" />
+                <div>
+                  <div className="font-semibold text-slate-900 dark:text-slate-100">
+                    Guardar Snapshot en Base de Datos
+                  </div>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Calcula deltas y rotación contra el scrape anterior
+                  </div>
+                </div>
+              </label>
+
+              <label className="flex items-center space-x-2.5 p-2 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-brand-400 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={generarDocumentos}
+                  onChange={(e) => setGenerarDocumentos(e.target.checked)}
+                  className="rounded text-brand-600 focus:ring-brand-500 dark:bg-slate-700"
+                />
+                <FileCheck2 className="w-4 h-4 text-emerald-500" />
+                <div>
+                  <div className="font-semibold text-slate-900 dark:text-slate-100">
+                    Compilar Documentos Binarios
+                  </div>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Genera reportes ejecutivos en Word (.docx) y Excel (.xlsx)
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+        )}
+      </form>
+
+      {/* Preset Suggestion Chips & Demo Load Button */}
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+        <div className="flex flex-wrap items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+          <span className="font-medium mr-1">Portales Sugeridos:</span>
+          {presetUrls.map((preset) => (
+            <button
+              key={preset.url}
+              type="button"
+              onClick={() => setUrl(preset.url)}
+              className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-brand-50 dark:hover:bg-brand-950/60 hover:text-brand-600 dark:hover:text-brand-400 border border-slate-200/80 dark:border-slate-700/80 transition-all font-medium text-[11px]"
+            >
+              {preset.label}
+            </button>
+          ))}
+        </div>
+
+        <button
+          type="button"
+          onClick={onLoadSample}
+          className="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline flex items-center space-x-1"
+        >
+          <Sparkles className="w-3.5 h-3.5" />
+          <span>Ver Ejemplo de Auditoría Completa</span>
+        </button>
+      </div>
+    </div>
+  );
+};

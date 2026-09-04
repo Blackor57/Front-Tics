@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Scraper API - Frontend</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-dark bg-dark sticky-top shadow">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">
+                <i class="fas fa-spider"></i> Web Scraper API
+            </span>
+            <div class="text-white-50 small">
+                <span id="api-status" class="badge bg-danger">Desconectado</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container-fluid py-4">
+        <div class="row">
+            <!-- Sidebar - Panel de Control -->
+            <div class="col-lg-3 mb-4">
+                <div class="card shadow-sm sticky-top" style="top: 80px;">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-magic"></i> Scraping Automático</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">
+                            <i class="fas fa-info-circle"></i> Extrae artículos y su contenido completo automáticamente.
+                        </p>
+                        <!-- Tabs de opciones -->
+                        <div class="nav flex-column nav-pills" id="option-tabs" role="tablist">
+                            <button class="nav-link" id="tab-index" data-bs-toggle="pill" data-bs-target="#panel-index" type="button" role="tab">
+                                <i class="fas fa-list"></i> Extraer Índice
+                            </button>
+                            <button class="nav-link" id="tab-deep" data-bs-toggle="pill" data-bs-target="#panel-deep" type="button" role="tab">
+                                <i class="fas fa-layer-group"></i> Deep Scraping
+                            </button>
+                            <button class="nav-link active" id="tab-pipeline" data-bs-toggle="pill" data-bs-target="#panel-pipeline" type="button" role="tab">
+                                <i class="fas fa-rocket"></i> Scraping Automático
+                            </button>
+                        </div>
+
+                        <!-- Panel 1: Extraer Índice -->
+                        <div class="tab-content mt-3">
+                            <div class="tab-pane fade" id="panel-index" role="tabpanel">
+                                <form id="form-index">
+                                    <div class="mb-3">
+                                        <label for="url-index" class="form-label">URL</label>
+                                        <input type="url" class="form-control" id="url-index" placeholder="Colocar Url" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="fas fa-search"></i> Extraer
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- Panel 2: Deep Scraping -->
+                            <div class="tab-pane fade" id="panel-deep" role="tabpanel">
+                                <form id="form-deep">
+                                    <div class="mb-3">
+                                        <label class="form-label">URLs para Deep Scraping</label>
+                                        <div id="deep-urls-container">
+                                            <div class="input-group mb-2">
+                                                <input type="url" class="form-control deep-url-input" placeholder="URL del artículo">
+                                                <button class="btn btn-outline-danger btn-remove-url" type="button">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-secondary w-100 mt-2" id="btn-add-url">
+                                            <i class="fas fa-plus"></i> Agregar URL
+                                        </button>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="fas fa-layer-group"></i> Procesar
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- Panel 3: Pipeline Completo -->
+                            <div class="tab-pane fade show active" id="panel-pipeline" role="tabpanel">
+                                <form id="form-pipeline">
+                                    <div class="mb-3">
+                                        <label for="url-pipeline" class="form-label">
+                                            <i class="fas fa-globe"></i> Ingresa una URL
+                                        </label>
+                                        <input type="url" class="form-control form-control-lg" id="url-pipeline" placeholder="Colocar Url" required>
+                                        <small class="text-muted d-block mt-2">
+                                            Presiona Enter o haz clic en "Ejecutar" para comenzar
+                                        </small>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="limit-pipeline" class="form-label">Número de artículos a extraer</label>
+                                        <div class="input-group">
+                                            <button type="button" class="btn btn-outline-secondary" id="btn-limit-minus">−</button>
+                                            <input type="number" class="form-control text-center" id="limit-pipeline" value="5" min="1" max="20" readonly>
+                                            <button type="button" class="btn btn-outline-secondary" id="btn-limit-plus">+</button>
+                                        </div>
+                                        <small class="text-muted d-block mt-2">Rango: 1 - 20 artículos</small>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary w-100 btn-lg">
+                                        <i class="fas fa-rocket"></i> Ejecutar Scraping
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content - Resultados -->
+            <div class="col-lg-9">
+                <!-- Loading Spinner -->
+                <div id="loading-container" class="alert alert-info d-none" role="alert">
+                    <div class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></div>
+                    <span id="loading-text">Procesando...</span>
+                </div>
+
+                <!-- Error Alert -->
+                <div id="error-container" class="alert alert-danger alert-dismissible fade d-none" role="alert">
+                    <strong>Error:</strong>
+                    <span id="error-text"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
+                <!-- Success Alert -->
+                <div id="success-container" class="alert alert-success alert-dismissible fade d-none" role="alert">
+                    <strong>Éxito:</strong>
+                    <span id="success-text"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
+                <!-- Results Container -->
+                <div id="results-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Templates para resultados -->
+    <template id="template-index-result">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-list-check"></i> Resultado: Índice Extraído
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p><strong>URL:</strong> <a href="#" target="_blank" id="result-url"></a></p>
+                        <p><strong>Título del Sitio:</strong> <span id="result-site-title"></span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Tipo de Contenido:</strong> <span id="result-tipo-contenido"></span></p>
+                        <p><strong>Total de Items:</strong> <span id="result-total-items" class="badge bg-info"></span></p>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label"><strong>Datos Extraídos:</strong></label>
+                    <div id="result-data" style="max-height: 600px; overflow-y: auto; background-color: #f8f9fa; padding: 15px; border-radius: 5px; font-family: monospace; font-size: 0.9rem; white-space: pre-wrap; word-wrap: break-word;"></div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="template-deep-result">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-layer-group"></i> Resultado: Deep Scraping Completado
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info mb-3">
+                    <strong>Total Procesados:</strong> <span id="result-deep-total"></span> artículos
+                </div>
+                <div id="result-articles-container"></div>
+            </div>
+        </div>
+    </template>
+
+    <template id="template-article">
+        <div class="card mb-3 border-left-primary">
+            <div class="card-header bg-light">
+                <h6 class="mb-1">
+                    <i class="fas fa-file-alt"></i>
+                    <span id="article-title"></span>
+                </h6>
+                <small class="text-muted" id="article-url"></small>
+            </div>
+            <div class="card-body">
+                <!-- Se retiró 'white-space: pre-wrap' para permitir formato Markdown/HTML fluido -->
+                <div id="article-content" style="font-size: 0.95rem; line-height: 1.6; word-wrap: break-word; overflow-wrap: break-word; background-color: #f8f9fa; padding: 15px; border-radius: 5px; border-left: 4px solid #667eea;"></div>
+                <small class="text-muted d-block mt-3">
+                    <i class="fas fa-file-word"></i>
+                    Caracteres: <span id="article-chars"></span>
+                </small>
+            </div>
+        </div>
+    </template>
+
+    <template id="template-pipeline-result">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-rocket"></i> Resultado: Pipeline Completo Ejecutado
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p><strong>URL Origen:</strong> <a href="#" target="_blank" id="pipeline-url"></a></p>
+                        <p><strong>Título Sitio:</strong> <span id="pipeline-site-title"></span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Total Indexados:</strong> <span id="pipeline-indexed" class="badge bg-info"></span></p>
+                        <p><strong>Total Procesados:</strong> <span id="pipeline-processed" class="badge bg-success"></span></p>
+                    </div>
+                </div>
+                <div id="pipeline-articles-container"></div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
