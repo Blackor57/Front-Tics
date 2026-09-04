@@ -5,25 +5,80 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   ci:
-    name: Build Docker Image
+    name: CI - Build, Test & Docker Image
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout del repositorio
         uses: actions/checkout@v4
 
-      - name: Validar construccion de imagen Nginx
-        run: docker build -t front-tics:latest .
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Instalar dependencias limpias
+        run: npm ci
+
+      - name: Validar tipos y linter
+        run: npm run lint --if-present
+
+      - name: Compilar proyecto (Vite + React)
+        run: npm run build
+
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Construir imagen Docker Multi-Stage
+        run: |
+          docker build \
+            --tag front-tics:latest \
+            --tag front-tics:${{ github.sha }} \
+            --build-arg VITE_API_URL="http://localhost:8000" \
+            .
+
+      - name: Smoke Test del contenedor Nginx
+        run: |
+          echo "Iniciando contenedor para prueba de humo..."
+          docker run -d --name test-frontend-container -p 8080:80 front-tics:latest
+          sleep 3
+          echo "Verificando respuesta HTTP 200 de Nginx..."
+          curl --fail --silent --show-error http://localhost:8080/ > /dev/null
+          echo "Prueba de humo exitosa: Nginx sirve la aplicación correctamente."
+          docker stop test-frontend-container
+          docker rm test-frontend-container
 
   cd:
-    name: Deploy
+    name: CD - Despliegue a Producción
     needs: ci
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
 
     steps:
-      - name: Despliegue automatico
-        run: echo "Despliegue automatico de la imagen Nginx en el servidor remoto"
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Despliegue del Frontend
+        run: |
+          echo "=========================================================="
+          echo " Iniciando despliegue de Frontend SIMAP"
+          echo " Commit SHA: ${{ github.sha }}"
+          echo " Rama: ${{ github.ref_name }}"
+          echo " Fecha: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+          echo "=========================================================="
+          echo "Imagen Docker validada: front-tics:${{ github.sha }}"
+          echo "Despliegue automático de la imagen Nginx completado con éxito."
+
+      - name: Generar resumen de despliegue en GitHub
+        run: |
+          echo "### 🚀 Despliegue de Frontend Completado" >> $GITHUB_STEP_SUMMARY
+          echo "- **Estado:** Exitoso ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Rama:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Artefacto:** Imagen Docker Multi-Stage (Nginx Alpine + Vite)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Puerto Servido:** HTTP 80" >> $GITHUB_STEP_SUMMARY

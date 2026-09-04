@@ -3,8 +3,15 @@ node_modules
 .github
 dist
 build
-.next
+legacy
+.env
 .env*.local
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 Dockerfile
-docker-compose.yml
+docker-compose*.yml
+.vscode
+.idea
+.DS_Store
+Thumbs.db
