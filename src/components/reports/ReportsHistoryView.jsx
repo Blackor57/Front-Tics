@@ -9,13 +9,16 @@ import {
   Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '../../context/AuthContext';
 
 export const ReportsHistoryView = ({ demoMode }) => {
+  const { isAuthenticated } = useAuth();
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
   const fetchReports = async () => {
+    if (!isAuthenticated) return;
     setLoading(true);
     try {
       if (demoMode) {
@@ -53,6 +56,20 @@ export const ReportsHistoryView = ({ demoMode }) => {
     window.open(url, '_blank');
     toast.success(`Descargando libro Excel para el reporte #${reportId}`);
   };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="w-full max-w-md mx-auto py-16 text-center space-y-4">
+        <div className="w-12 h-12 rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center mx-auto">
+          <FileText className="w-6 h-6" />
+        </div>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white">Acceso al Historial Restringido</h2>
+        <p className="text-xs text-slate-500 dark:text-slate-400">
+          Inicia sesión para acceder y descargar tus informes ejecutivos previos.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-7xl mx-auto space-y-6 pb-20 animate-in fade-in duration-300">

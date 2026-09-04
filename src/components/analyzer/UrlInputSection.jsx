@@ -1,11 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Link as LinkIcon,
   Sparkles,
-  SlidersHorizontal,
-  ChevronUp,
-  FileCheck2,
-  Database,
   ArrowRight,
   Zap,
 } from 'lucide-react';
@@ -21,12 +17,10 @@ export const UrlInputSection = ({
   onLoadSample,
   isLoading,
 }) => {
-  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const presetUrls = [
     { label: 'RPP Noticias', url: 'https://rpp.pe/politica-y-economia' },
     { label: 'El Comercio Economía', url: 'https://elcomercio.pe/economia' },
-    { label: 'Normas Legales El Peruano', url: 'https://busquedas.elperuano.pe/normaslegales/' },
   ];
 
   const handleSubmit = (e) => {
@@ -69,20 +63,11 @@ export const UrlInputSection = ({
             />
           </div>
 
-          <div className="flex items-center space-x-2 w-full sm:w-auto mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800">
-            <button
-              type="button"
-              onClick={() => setShowAdvanced(!showAdvanced)}
-              className="p-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-              title="Opciones avanzadas"
-            >
-              <SlidersHorizontal className="w-4 h-4" />
-            </button>
-
+          <div className="w-full sm:w-auto mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800">
             <button
               type="submit"
               disabled={isLoading || !url.trim()}
-              className="flex-1 sm:flex-none flex items-center justify-center space-x-2 px-6 py-3 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-brand-600 via-indigo-600 to-brand-700 hover:from-brand-500 hover:to-indigo-500 shadow-md hover:shadow-glow-indigo transition-all disabled:opacity-50 disabled:cursor-not-allowed group cursor-pointer"
+              className="w-full sm:w-auto flex items-center justify-center space-x-2 px-6 py-3 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-brand-600 via-indigo-600 to-brand-700 hover:from-brand-500 hover:to-indigo-500 shadow-md hover:shadow-glow-indigo transition-all disabled:opacity-50 disabled:cursor-not-allowed group cursor-pointer"
             >
               <Zap className="w-4 h-4 group-hover:scale-110 transition-transform" />
               <span>Auditar con Inteligencia Artificial</span>
@@ -90,63 +75,6 @@ export const UrlInputSection = ({
             </button>
           </div>
         </div>
-
-        {/* Advanced Options Drawer */}
-        {showAdvanced && (
-          <div className="mt-3 p-4 rounded-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200 dark:border-slate-800 shadow-lg animate-in fade-in zoom-in-95 text-xs text-slate-600 dark:text-slate-300">
-            <div className="flex items-center justify-between font-semibold text-slate-900 dark:text-white mb-2">
-              <span className="flex items-center space-x-1.5">
-                <SlidersHorizontal className="w-3.5 h-3.5 text-brand-500" />
-                <span>Parámetros de Pipeline de Scraping</span>
-              </span>
-              <button
-                type="button"
-                onClick={() => setShowAdvanced(false)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-white"
-              >
-                <ChevronUp className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-              <label className="flex items-center space-x-2.5 p-2 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-brand-400 transition-colors">
-                <input
-                  type="checkbox"
-                  checked={guardarSnapshot}
-                  onChange={(e) => setGuardarSnapshot(e.target.checked)}
-                  className="rounded text-brand-600 focus:ring-brand-500 dark:bg-slate-700"
-                />
-                <Database className="w-4 h-4 text-brand-500" />
-                <div>
-                  <div className="font-semibold text-slate-900 dark:text-slate-100">
-                    Guardar Snapshot en Base de Datos
-                  </div>
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                    Calcula deltas y rotación contra el scrape anterior
-                  </div>
-                </div>
-              </label>
-
-              <label className="flex items-center space-x-2.5 p-2 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-brand-400 transition-colors">
-                <input
-                  type="checkbox"
-                  checked={generarDocumentos}
-                  onChange={(e) => setGenerarDocumentos(e.target.checked)}
-                  className="rounded text-brand-600 focus:ring-brand-500 dark:bg-slate-700"
-                />
-                <FileCheck2 className="w-4 h-4 text-emerald-500" />
-                <div>
-                  <div className="font-semibold text-slate-900 dark:text-slate-100">
-                    Compilar Documentos Binarios
-                  </div>
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                    Genera reportes ejecutivos en Word (.docx) y Excel (.xlsx)
-                  </div>
-                </div>
-              </label>
-            </div>
-          </div>
-        )}
       </form>
 
       {/* Preset Suggestion Chips & Demo Load Button */}

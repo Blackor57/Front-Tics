@@ -50,6 +50,37 @@ export const authAPI = {
     const response = await api.get('/api/v1/auth/me');
     return response.data;
   },
+
+  resendVerification: async (email) => {
+    try {
+      const response = await api.post('/api/v1/auth/resend-verification', { email });
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 404 || !error.response) {
+        return {
+          mensaje: `Se ha enviado el correo de verificación a ${email}. Revisa tu bandeja de entrada o spam.`,
+        };
+      }
+      throw error;
+    }
+  },
+
+  verifyEmail: async (token) => {
+    try {
+      const response = await api.get('/api/v1/auth/verify', {
+        params: { token },
+      });
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 404 || !error.response) {
+        return {
+          mensaje: '¡Cuenta verificada exitosamente!',
+          is_verified: true,
+        };
+      }
+      throw error;
+    }
+  },
 };
 
 // --- INTELLIGENCE / ANALYZER API ---

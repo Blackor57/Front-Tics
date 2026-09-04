@@ -29,12 +29,14 @@ import {
   Pie,
 } from 'recharts';
 import { reportsAPI } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import { toast } from 'sonner';
 
 export const PreviewDashboard = ({
   data,
   onOpenTracking,
 }) => {
+  const { isAuthenticated } = useAuth();
   const {
     url,
     sitio_titulo,
@@ -421,8 +423,17 @@ export const PreviewDashboard = ({
                     backgroundColor: '#0f172a',
                     borderColor: '#334155',
                     borderRadius: '0.75rem',
-                    color: '#fff',
+                    color: '#ffffff',
                     fontSize: '12px',
+                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)',
+                  }}
+                  itemStyle={{
+                    color: '#e2e8f0',
+                  }}
+                  labelStyle={{
+                    color: '#ffffff',
+                    fontWeight: 'bold',
+                    marginBottom: '2px',
                   }}
                   formatter={(value, name, item) => [
                     `${value} ítems (${item.payload.porcentaje}%)`,
@@ -476,8 +487,16 @@ export const PreviewDashboard = ({
                       backgroundColor: '#0f172a',
                       borderColor: '#334155',
                       borderRadius: '0.75rem',
-                      color: '#fff',
+                      color: '#ffffff',
                       fontSize: '12px',
+                      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)',
+                    }}
+                    itemStyle={{
+                      color: '#e2e8f0',
+                    }}
+                    labelStyle={{
+                      color: '#ffffff',
+                      fontWeight: 'bold',
                     }}
                     formatter={(val) => [`${val}%`, 'Porcentaje']}
                   />
@@ -718,21 +737,25 @@ export const PreviewDashboard = ({
           </div>
 
           <div className="flex items-center space-x-2 w-full sm:w-auto justify-end">
-            <button
-              onClick={handleDownloadWord}
-              className="flex-1 sm:flex-none px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950/50 hover:text-blue-600 dark:hover:text-blue-400 border border-slate-200 dark:border-slate-700 transition-all flex items-center justify-center space-x-1.5 cursor-pointer shadow-sm"
-            >
-              <FileText className="w-4 h-4 text-blue-500" />
-              <span>Informe Word (.docx)</span>
-            </button>
+            {isAuthenticated && (
+              <>
+                <button
+                  onClick={handleDownloadWord}
+                  className="flex-1 sm:flex-none px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950/50 hover:text-blue-600 dark:hover:text-blue-400 border border-slate-200 dark:border-slate-700 transition-all flex items-center justify-center space-x-1.5 cursor-pointer shadow-sm"
+                >
+                  <FileText className="w-4 h-4 text-blue-500" />
+                  <span>Informe Word (.docx)</span>
+                </button>
 
-            <button
-              onClick={handleDownloadExcel}
-              className="flex-1 sm:flex-none px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 hover:text-emerald-600 dark:hover:text-emerald-400 border border-slate-200 dark:border-slate-700 transition-all flex items-center justify-center space-x-1.5 cursor-pointer shadow-sm"
-            >
-              <FileSpreadsheet className="w-4 h-4 text-emerald-500" />
-              <span>Libro Excel (.xlsx)</span>
-            </button>
+                <button
+                  onClick={handleDownloadExcel}
+                  className="flex-1 sm:flex-none px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 hover:text-emerald-600 dark:hover:text-emerald-400 border border-slate-200 dark:border-slate-700 transition-all flex items-center justify-center space-x-1.5 cursor-pointer shadow-sm"
+                >
+                  <FileSpreadsheet className="w-4 h-4 text-emerald-500" />
+                  <span>Libro Excel (.xlsx)</span>
+                </button>
+              </>
+            )}
 
             <button
               onClick={() => onOpenTracking(url)}

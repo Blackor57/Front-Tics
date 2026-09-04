@@ -7,13 +7,15 @@ import { TrackingView } from './components/tracking/TrackingView';
 import { TrackingModal } from './components/tracking/TrackingModal';
 import { ReportsHistoryView } from './components/reports/ReportsHistoryView';
 import { AuthModal } from './components/auth/AuthModal';
-import { intelligenceAPI, checkBackendHealth, getMockAnalyzeResponse } from './services/api';
+import { VerificationBanner } from './components/auth/VerificationBanner';
+import { VerificationRequiredModal } from './components/auth/VerificationRequiredModal';
+import { intelligenceAPI, authAPI, checkBackendHealth, getMockAnalyzeResponse } from './services/api';
 import { useAuth } from './context/AuthContext';
 import { useTheme } from './context/ThemeContext';
 import { Toaster, toast } from 'sonner';
 
 export const App = () => {
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated, markUserAsVerified } = useAuth();
   const { theme } = useTheme();
 
   // Navigation State
@@ -33,6 +35,7 @@ export const App = () => {
   // Modals State
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState('login');
+  const [verificationModalOpen, setVerificationModalOpen] = useState(false);
   const [trackingModalOpen, setTrackingModalOpen] = useState(false);
   const [trackingModalUrl, setTrackingModalUrl] = useState('');
 
@@ -47,6 +50,40 @@ export const App = () => {
     };
     ping();
   }, []);
+
+  // Switch away from protected tabs if unauthenticated
+  useEffect(() => {
+    if (!isAuthenticated && (currentTab === 'reports' || currentTab === 'tracking')) {
+      setCurrentTab('analyzer');
+    }
+  }, [isAuthenticated, currentTab]);
+
+  // Check URL query param for email verification token (?token=...)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    if (token) {
+      const verify = async () => {
+        try {
+          const res = await authAPI.verifyEmail(token);
+          toast.success('¡Correo verificado con éxito!', {
+            description:
+              res?.mensaje || 'Tu cuenta ha sido activada y tienes acceso completo.',
+          });
+          markUserAsVerified();
+        } catch (err) {
+          const msg =
+            err.response?.data?.detail ||
+            'El enlace de verificación no es válido o ha expirado.';
+          toast.error('Error de verificación', { description: msg });
+        } finally {
+          const cleanUrl = window.location.pathname;
+          window.history.replaceState({}, document.title, cleanUrl);
+        }
+      };
+      verify();
+    }
+  }, [markUserAsVerified]);
 
   // Execute Analysis Pipeline
   const handleAnalyze = async () => {
@@ -110,6 +147,11 @@ export const App = () => {
       return;
     }
 
+    if (user && !user.is_verified) {
+      setVerificationModalOpen(true);
+      return;
+    }
+
     setTrackingModalUrl(targetUrl || url);
     setTrackingModalOpen(true);
   };
@@ -117,6 +159,9 @@ export const App = () => {
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-200">
       <Toaster position="top-right" richColors theme={theme} closeButton />
+
+      {/* Email Verification Banner */}
+      <VerificationBanner />
 
       {/* Navigation Bar */}
       <Navbar
@@ -170,6 +215,10 @@ export const App = () => {
         {currentTab === 'tracking' && (
           <TrackingView
             onOpenNewTarget={() => {
+              if (user && !user.is_verified) {
+                setVerificationModalOpen(true);
+                return;
+              }
               setTrackingModalUrl('');
               setTrackingModalOpen(true);
             }}
@@ -178,7 +227,7 @@ export const App = () => {
         )}
 
         {/* TAB 3: REPORT HISTORY */}
-        {currentTab === 'reports' && (
+        {currentTab === 'reports' && isAuthenticated && (
           <ReportsHistoryView demoMode={demoModeActive} />
         )}
       </main>
@@ -202,6 +251,12 @@ export const App = () => {
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
         initialMode={authModalMode}
+      />
+
+      {/* Verification Required Modal */}
+      <VerificationRequiredModal
+        isOpen={verificationModalOpen}
+        onClose={() => setVerificationModalOpen(false)}
       />
 
       {/* Continuous Tracking Schedule Modal */}

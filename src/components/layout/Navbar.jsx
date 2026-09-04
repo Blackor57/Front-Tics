@@ -14,6 +14,7 @@ import {
   Sparkles,
   Server,
   ShieldCheck,
+  Mail,
 } from 'lucide-react';
 
 export const Navbar = ({
@@ -95,17 +96,19 @@ export const Navbar = ({
               )}
             </button>
 
-            <button
-              onClick={() => onSelectTab('reports')}
-              className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${
-                currentTab === 'reports'
-                  ? 'bg-brand-50 dark:bg-brand-950/70 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-800'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
-              }`}
-            >
-              <FileText className="w-4 h-4" />
-              <span>Historial</span>
-            </button>
+            {isAuthenticated && (
+              <button
+                onClick={() => onSelectTab('reports')}
+                className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${
+                  currentTab === 'reports'
+                    ? 'bg-brand-50 dark:bg-brand-950/70 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-800'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
+                }`}
+              >
+                <FileText className="w-4 h-4" />
+                <span>Historial</span>
+              </button>
+            )}
           </nav>
 
           {/* Right Controls */}
@@ -167,9 +170,21 @@ export const Navbar = ({
                         {user.nombre_completo || 'Usuario SIMAP'}
                       </p>
                       <p className="text-slate-500 dark:text-slate-400 truncate">{user.email}</p>
-                      <div className="mt-1 flex items-center space-x-1 text-emerald-600 dark:text-emerald-400 font-medium text-[10px]">
-                        <ShieldCheck className="w-3 h-3" />
-                        <span>Sesión JWT Activa</span>
+                      <div className="mt-1 flex items-center justify-between font-medium text-[10px]">
+                        <span className="flex items-center space-x-1 text-emerald-600 dark:text-emerald-400">
+                          <ShieldCheck className="w-3 h-3" />
+                          <span>JWT Activo</span>
+                        </span>
+                        {user.is_verified ? (
+                          <span className="px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 font-bold text-[9px]">
+                            Verificado
+                          </span>
+                        ) : (
+                          <span className="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400 font-bold text-[9px] flex items-center space-x-0.5">
+                            <Mail className="w-2.5 h-2.5" />
+                            <span>Sin Confirmar</span>
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -285,20 +300,22 @@ export const Navbar = ({
             <span>Monitoreo Continuo</span>
           </button>
 
-          <button
-            onClick={() => {
-              onSelectTab('reports');
-              setMobileMenuOpen(false);
-            }}
-            className={`w-full flex items-center space-x-2 px-3 py-2 rounded-lg font-medium ${
-              currentTab === 'reports'
-                ? 'bg-brand-50 dark:bg-brand-950/70 text-brand-600 dark:text-brand-400'
-                : 'text-slate-700 dark:text-slate-300'
-            }`}
-          >
-            <FileText className="w-4 h-4" />
-            <span>Historial de Reportes</span>
-          </button>
+          {isAuthenticated && (
+            <button
+              onClick={() => {
+                onSelectTab('reports');
+                setMobileMenuOpen(false);
+              }}
+              className={`w-full flex items-center space-x-2 px-3 py-2 rounded-lg font-medium ${
+                currentTab === 'reports'
+                  ? 'bg-brand-50 dark:bg-brand-950/70 text-brand-600 dark:text-brand-400'
+                  : 'text-slate-700 dark:text-slate-300'
+              }`}
+            >
+              <FileText className="w-4 h-4" />
+              <span>Historial de Reportes</span>
+            </button>
+          )}
 
           <div className="pt-2 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
             <button

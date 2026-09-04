@@ -92,6 +92,27 @@ export const AuthProvider = ({ children }) => {
     toast.info('Sesión cerrada correctamente');
   };
 
+  const refreshUser = async () => {
+    try {
+      const me = await authAPI.getMe();
+      setUser(me);
+      localStorage.setItem('simap_user', JSON.stringify(me));
+      return me;
+    } catch (e) {
+      console.error('Error al actualizar el usuario:', e);
+      return null;
+    }
+  };
+
+  const markUserAsVerified = () => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const updated = { ...prev, is_verified: true };
+      localStorage.setItem('simap_user', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   const setDemoUser = () => {
     const demoUser = {
       id: 999,
@@ -99,6 +120,7 @@ export const AuthProvider = ({ children }) => {
       nombre_completo: 'Analista de Inteligencia',
       is_active: true,
       is_superuser: false,
+      is_verified: false,
       created_at: new Date().toISOString(),
     };
     const demoToken = 'demo-jwt-simap-token';
@@ -122,6 +144,8 @@ export const AuthProvider = ({ children }) => {
         register,
         logout,
         setDemoUser,
+        refreshUser,
+        markUserAsVerified,
       }}
     >
       {children}
