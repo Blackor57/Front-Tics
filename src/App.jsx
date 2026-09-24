@@ -6,6 +6,7 @@ import { PreviewDashboard } from './components/analyzer/PreviewDashboard';
 import { TrackingView } from './components/tracking/TrackingView';
 import { TrackingModal } from './components/tracking/TrackingModal';
 import { ReportsHistoryView } from './components/reports/ReportsHistoryView';
+import { AiWorkbench } from './components/ai/AiWorkbench';
 import { AuthModal } from './components/auth/AuthModal';
 import { VerificationBanner } from './components/auth/VerificationBanner';
 import { VerificationRequiredModal } from './components/auth/VerificationRequiredModal';
@@ -230,6 +231,9 @@ export const App = () => {
         {currentTab === 'reports' && isAuthenticated && (
           <ReportsHistoryView demoMode={demoModeActive} />
         )}
+
+        {/* TAB 4: INTELIGENCIA AVANZADA (RAG, Whisper y Agente) */}
+        {currentTab === 'ai' && <AiWorkbench />}
       </main>
 
       {/* Footer */}
