@@ -1,4 +1,4 @@
-# 🕷️ SIMAP — Sistema Inteligente de Monitoreo, Auditoría y Procesamiento Web
+# 🕷️ SIMAP — Sistema Inteligente de Monitoreo Web, Auditoría y Procesamiento Web
 ## Plataforma Integral de Inteligencia Web, Extracción Multinivel, Análisis Semántico Local (LLM) y Generación de Reportes
 
 [![React](https://img.shields.io/badge/Frontend-React%2018.3-61DAFB?logo=react&logoColor=black)](https://reactjs.org/)
