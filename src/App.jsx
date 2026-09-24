@@ -10,6 +10,7 @@ import { AiWorkbench } from './components/ai/AiWorkbench';
 import { AuthModal } from './components/auth/AuthModal';
 import { VerificationBanner } from './components/auth/VerificationBanner';
 import { VerificationRequiredModal } from './components/auth/VerificationRequiredModal';
+import { ChatWidget } from './components/chat/ChatWidget';
 import { intelligenceAPI, authAPI, checkBackendHealth, getMockAnalyzeResponse } from './services/api';
 import { useAuth } from './context/AuthContext';
 import { useTheme } from './context/ThemeContext';
@@ -275,6 +276,9 @@ export const App = () => {
         }}
         demoMode={demoModeActive}
       />
+
+      {/* Chatbot RAG flotante (conecta a simap_chatbot_service :8501 vía SSE) */}
+      <ChatWidget />
     </div>
   );
 };
