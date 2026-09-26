@@ -111,7 +111,8 @@ graph TB
 | **Frontend Web** | `3000` | HTTP | Interfaz de usuario SPA servida por Vite (o Nginx en Docker) |
 | **Core API Backend** | `8000` | HTTP | API REST FastAPI, Swagger UI (`/docs`), descarga de reportes |
 | **Worker de Scraping** | `8001` | HTTP | Microservicio desacoplado de Playwright Chromium |
-| **Ollama LLM** | `11434` | HTTP | Servidor de inferencia de modelos de lenguaje local |
+| **Chatbot Auditor (MS 5)** | `8501` | HTTP | Asistente conversacional RAG, Gemini 3.1 Flash Lite, Text-to-SQL y voz |
+| **Ollama LLM** | `11434` | HTTP | Servidor de inferencia local de respaldo (LLaMA 3.1) |
 | **PostgreSQL** | `5432` | TCP | Base de datos relacional para persistencia de estados |
 
 ---

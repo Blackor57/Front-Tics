@@ -15,16 +15,28 @@ export const aiAPI = {
     return response.data;
   },
 
-  // Transcripción de medios (faster-whisper + Ollama)
+  // Transcripción de medios multimodal (Google Gemini Flash Lite / Ollama)
   transcribe: async (payload) => {
-    const response = await api.post('/api/v1/ai/transcribe', {
-      media_url: payload.media_url || null,
-      pagina_origen: payload.pagina_origen || null,
-      idioma: payload.idioma || 'es',
-      resumir: payload.resumir ?? true,
-      incluir_segmentos: payload.incluir_segmentos ?? false,
-      modelo_whisper: payload.modelo_whisper || null,
-    }, { timeout: 600000 });
+    // Soporte para subida directa de audio (FormData) o URL multimedia
+    if (payload instanceof FormData) {
+      const response = await api.post('/api/v1/ai/transcribe', payload, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 600000,
+      });
+      return response.data;
+    }
+    const response = await api.post(
+      '/api/v1/ai/transcribe',
+      {
+        media_url: payload.media_url || null,
+        pagina_origen: payload.pagina_origen || null,
+        idioma: payload.idioma || 'es',
+        resumir: payload.resumir ?? true,
+        incluir_segmentos: payload.incluir_segmentos ?? false,
+        modelo: payload.modelo || payload.modelo_motor || 'gemini-3.1-flash-lite',
+      },
+      { timeout: 600000 }
+    );
     return response.data;
   },
 

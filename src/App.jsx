@@ -11,10 +11,12 @@ import { AuthModal } from './components/auth/AuthModal';
 import { VerificationBanner } from './components/auth/VerificationBanner';
 import { VerificationRequiredModal } from './components/auth/VerificationRequiredModal';
 import { ChatWidget } from './components/chat/ChatWidget';
+import { ChatbotAuditor } from './components/chat/ChatbotAuditor';
 import { intelligenceAPI, authAPI, checkBackendHealth, getMockAnalyzeResponse } from './services/api';
 import { useAuth } from './context/AuthContext';
 import { useTheme } from './context/ThemeContext';
 import { Toaster, toast } from 'sonner';
+import { getChatSessionId, syncActiveContext } from './services/chat';
 
 export const App = () => {
   const { user, isAuthenticated, markUserAsVerified } = useAuth();
@@ -107,10 +109,11 @@ export const App = () => {
           url: url.trim(),
           guardar_snapshot: guardarSnapshot,
           generar_documentos: generarDocumentos,
+          session_id: getChatSessionId(),
         });
         setAnalyzeResult(response);
         toast.success('Auditoría en vivo finalizada', {
-          description: `Análisis procesado con Ollama Llama 3.1 para ${response.sitio_titulo || url}`,
+          description: `Análisis procesado con Google Gemini 3.1 Flash Lite / Ollama para ${response.sitio_titulo || url}`,
         });
       }
     } catch (error) {
@@ -133,6 +136,7 @@ export const App = () => {
     const sample = getMockAnalyzeResponse('https://rpp.pe/politica-y-economia');
     setUrl('https://rpp.pe/politica-y-economia');
     setAnalyzeResult(sample);
+    syncActiveContext(getChatSessionId(), sample);
     toast.info('Auditoría de muestra cargada', {
       description: 'Explora todos los gráficos, KPIs y la matriz estructurada de entidades.',
     });
@@ -233,8 +237,7 @@ export const App = () => {
           <ReportsHistoryView demoMode={demoModeActive} />
         )}
 
-        {/* TAB 4: INTELIGENCIA AVANZADA (RAG, Whisper y Agente) */}
-        {currentTab === 'ai' && <AiWorkbench />}
+
       </main>
 
       {/* Footer */}
@@ -245,7 +248,7 @@ export const App = () => {
             <span>• Universal Web Scraper & Intelligence</span>
           </div>
           <div className="flex items-center space-x-4">
-            <span>Playwright + Ollama Llama 3.1 + FastAPI</span>
+            <span>Playwright + Google Gemini 3.1 Flash Lite + Ollama + FastAPI</span>
             <span>v2.5 Production</span>
           </div>
         </div>
@@ -278,7 +281,7 @@ export const App = () => {
       />
 
       {/* Chatbot RAG flotante (conecta a simap_chatbot_service :8501 vía SSE) */}
-      <ChatWidget />
+      <ChatWidget currentAnalysis={analyzeResult} />
     </div>
   );
 };

@@ -114,7 +114,7 @@ export const TrackingView = ({
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xl">
             Tus portales registrados son analizados automáticamente según la frecuencia programada.
-            Si Ollama detecta cambios o alertas de alto impacto, recibirás un reporte inmediato.
+            Si Gemini o Ollama detectan cambios o alertas de alto impacto, recibirás un reporte inmediato.
           </p>
         </div>
 

@@ -36,7 +36,7 @@ export const UrlInputSection = ({
       <div className="text-center space-y-2 pt-2 pb-1">
         <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-semibold bg-brand-50 dark:bg-brand-950/80 text-brand-700 dark:text-brand-300 border border-brand-200/80 dark:border-brand-800 shadow-sm">
           <Sparkles className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
-          <span>Scraping Universal + Detección Temporal + Ollama Llama 3.1</span>
+          <span>Scraping Universal + Detección Temporal + Google Gemini 3.1 Flash Lite / Ollama</span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
           Inteligencia Web y Detección de Cambios

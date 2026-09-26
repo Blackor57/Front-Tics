@@ -19,8 +19,8 @@ export const LoadingPipeline = ({ url }) => {
     },
     {
       id: 3,
-      title: 'Analizando contenido con Ollama (Llama 3.1)...',
-      detail: 'Extrayendo entidades (instituciones, personas, normas), sentimientos y puntos urgentes.',
+      title: 'Analizando contenido con Google Gemini (gemini-3.1-flash-lite)...',
+      detail: 'Extrayendo entidades (instituciones, personas, normas), sentimientos y puntos urgentes con Gemini / Ollama.',
       icon: Cpu,
       color: 'text-purple-500',
     },

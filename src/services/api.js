@@ -143,6 +143,38 @@ export const trackingAPI = {
   },
 };
 
+// --- SNAPSHOTS API ---
+export const snapshotsAPI = {
+  getLatest: async (limit = 10) => {
+    const response = await api.get('/api/v1/snapshots/latest', {
+      params: { limit },
+    });
+    return response.data;
+  },
+
+  getIntelligenceSnapshots: async (limit = 20) => {
+    try {
+      const response = await api.get('/api/v1/intelligence/snapshots', {
+        params: { limit },
+      });
+      return response.data;
+    } catch {
+      return snapshotsAPI.getLatest(limit);
+    }
+  },
+};
+
+// --- SCRAPING DIRECTO API ---
+export const scrapingAPI = {
+  scrapeIndex: async (url, guardarSnapshot = true) => {
+    const response = await api.post('/api/v1/scrape/index', {
+      url,
+      guardar_snapshot: guardarSnapshot,
+    });
+    return response.data;
+  },
+};
+
 // --- HEALTH CHECK ---
 export const checkBackendHealth = async () => {
   try {

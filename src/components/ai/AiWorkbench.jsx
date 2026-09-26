@@ -13,13 +13,19 @@ import {
   RefreshCw,
   ShieldCheck,
   MonitorCog,
+  Upload,
+  History,
+  Cpu,
 } from 'lucide-react';
 import aiAPI from '../../services/ai';
+import { snapshotsAPI } from '../../services/api';
+import { ChatbotAuditor } from '../chat/ChatbotAuditor';
 
 const PANELES = [
+  { id: 'auditor', label: 'Chatbot Auditor Gemini (:8501)', icon: Bot },
   { id: 'rag', label: 'Asistente RAG', icon: MessageCircleQuestion },
-  { id: 'transcribe', label: 'Transcripción', icon: Mic },
-  { id: 'agent', label: 'Agente Autónomo', icon: Bot },
+  { id: 'transcribe', label: 'Transcripción Multimodal', icon: Mic },
+  { id: 'agent', label: 'Agente Autónomo', icon: Sparkles },
 ];
 
 const MODOS_AGENTE = [
@@ -61,11 +67,34 @@ export const AiWorkbench = () => {
   // Transcript state
   const [mediaUrl, setMediaUrl] = useState('');
   const [pageUrl, setPageUrl] = useState('');
+  const [audioFile, setAudioFile] = useState(null);
   const [idioma, setIdioma] = useState('es');
-  const [whisperModel, setWhisperModel] = useState('base');
+  const [transcriptionEngine, setTranscriptionEngine] = useState('gemini-3.1-flash-lite');
   const [resumir, setResumir] = useState(true);
   const [transcript, setTranscript] = useState(null);
   const [transcriptLoading, setTranscriptLoading] = useState(false);
+
+  // Latest snapshots selector state
+  const [latestSnapshots, setLatestSnapshots] = useState([]);
+  const [loadingSnapshots, setLoadingSnapshots] = useState(false);
+
+  const fetchLatestSnapshots = async () => {
+    setLoadingSnapshots(true);
+    try {
+      const data = await snapshotsAPI.getLatest(6);
+      const list = Array.isArray(data) ? data : data?.snapshots || data?.items || [];
+      setLatestSnapshots(list);
+      if (list.length === 0) {
+        toast.info('No hay snapshots previos registrados en el backend.');
+      }
+    } catch (err) {
+      toast.error('No se pudieron consultar snapshots recientes', {
+        description: err.response?.data?.detail || 'Verifica el servicio en :8000',
+      });
+    } finally {
+      setLoadingSnapshots(false);
+    }
+  };
 
   // Agent state
   const [modoAgente, setModoAgente] = useState('contexto');
@@ -106,26 +135,36 @@ export const AiWorkbench = () => {
   };
 
   const handleTranscribe = async () => {
-    if (!mediaUrl.trim() && !pageUrl.trim()) {
-      toast.warning('Indica una URL de audio/video o una página para detectar medios.');
+    if (!audioFile && !mediaUrl.trim() && !pageUrl.trim()) {
+      toast.warning('Indica una URL de audio/video, una página o selecciona un archivo de audio.');
       return;
     }
     setTranscriptLoading(true);
     setTranscript(null);
     try {
-      const res = await aiAPI.transcribe({
-        media_url: mediaUrl.trim() || null,
-        pagina_origen: pageUrl.trim() || null,
-        idioma,
-        resumir,
-        modelo_whisper: whisperModel === 'base' ? null : whisperModel,
-      });
+      let payload;
+      if (audioFile) {
+        payload = new FormData();
+        payload.append('file', audioFile);
+        if (idioma) payload.append('idioma', idioma);
+        payload.append('resumir', String(resumir));
+        payload.append('modelo', transcriptionEngine);
+      } else {
+        payload = {
+          media_url: mediaUrl.trim() || null,
+          pagina_origen: pageUrl.trim() || null,
+          idioma,
+          resumir,
+          modelo: transcriptionEngine,
+        };
+      }
+      const res = await aiAPI.transcribe(payload);
       if (res.error) {
         toast.error('Transcripción falló', { description: res.error });
       } else {
         setTranscript(res);
         toast.success('Transcripción completada', {
-          description: `${(res.duracion_segundos || 0).toFixed(1)}s de audio transcritas en local.`,
+          description: `${(res.duracion_segundos || 0).toFixed(1)}s procesados con Google Gemini / Ollama.`,
         });
       }
     } catch (err) {
@@ -212,13 +251,17 @@ export const AiWorkbench = () => {
         <div>
           <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">Inteligencia Avanzada</h2>
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            RAG sobre datos scrapeados, transcripción local de sesiones y agente autónomo (Ollama).
+            RAG sobre datos scrapeados, transcripción multimodal con Google Gemini y agente autónomo.
           </p>
         </div>
-        <div className="flex items-center space-x-2 text-xs">
-          <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-            <ShieldCheck className="w-3 h-3" />
-            <span>100% Local · Ollama</span>
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-medium">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>🟢 Google Gemini (gemini-3.1-flash-lite)</span>
+          </span>
+          <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30 font-medium">
+            <Cpu className="w-3 h-3" />
+            <span>Ollama (Respaldo Offline)</span>
           </span>
         </div>
       </div>
@@ -259,7 +302,18 @@ export const AiWorkbench = () => {
 
           <div className="grid sm:grid-cols-3 gap-3">
             <div>
-              <label className={labelCls}>URL (opcional)</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className={labelCls}>URL (opcional)</label>
+                <button
+                  type="button"
+                  onClick={fetchLatestSnapshots}
+                  disabled={loadingSnapshots}
+                  className="text-[11px] text-brand-600 dark:text-brand-400 hover:underline flex items-center space-x-1"
+                >
+                  <History className="w-3 h-3" />
+                  <span>{loadingSnapshots ? 'Cargando…' : 'Cargar snapshots recientes'}</span>
+                </button>
+              </div>
               <input
                 type="text"
                 value={ragUrl}
@@ -267,6 +321,24 @@ export const AiWorkbench = () => {
                 placeholder="https://muni.gob.pe/… (acota la búsqueda)"
                 className={inputCls}
               />
+              {latestSnapshots.length > 0 && (
+                <div className="mt-1.5 flex flex-wrap gap-1">
+                  {latestSnapshots.slice(0, 4).map((s, idx) => {
+                    const snapUrl = s.url || s.target_url;
+                    return snapUrl ? (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setRagUrl(snapUrl)}
+                        className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-brand-50 dark:hover:bg-brand-950/40 hover:text-brand-600 truncate max-w-[220px]"
+                        title={snapUrl}
+                      >
+                        {snapUrl.replace(/^https?:\/\//, '')}
+                      </button>
+                    ) : null;
+                  })}
+                </div>
+              )}
             </div>
             <div>
               <label className={labelCls}>Fragmentos (top-k)</label>
@@ -287,7 +359,7 @@ export const AiWorkbench = () => {
           </div>
 
           <BotonAccion onClick={handleAsk} loading={ragLoading} icon={Send}>
-            Consultar con Ollama
+            Consultar con Gemini / Ollama
           </BotonAccion>
 
           {ragResult && (
@@ -332,17 +404,73 @@ export const AiWorkbench = () => {
       )}
 
       {/* ------------------------------------------------ */}
+      {/* ------------------------------------------------ */}
+      {/* PANEL AUDITOR GEMINI (IFRAME) */}
+      {/* ------------------------------------------------ */}
+      {panel === 'auditor' && <ChatbotAuditor />}
+
+      {/* ------------------------------------------------ */}
       {/* PANEL TRANSCRIPCIÓN */}
       {/* ------------------------------------------------ */}
       {panel === 'transcribe' && (
         <Card className="p-5 space-y-4">
+          {/* Opción de subida de archivo directo o URL */}
+          <div className="p-3 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/40">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <label className={labelCls}>Archivo de Audio Local (multipart/form-data)</label>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Sube directamente un archivo de audio para transcribir y sintetizar con Google Gemini Flash Lite.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-brand-500 cursor-pointer text-xs font-medium text-slate-700 dark:text-slate-200 shadow-sm transition">
+                  <Upload className="w-3.5 h-3.5 text-brand-500" />
+                  <span>{audioFile ? audioFile.name : 'Subir archivo de audio'}</span>
+                  <input
+                    type="file"
+                    accept="audio/*,video/*"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0] || null;
+                      setAudioFile(f);
+                      if (f) {
+                        setMediaUrl('');
+                        setPageUrl('');
+                      }
+                    }}
+                    className="hidden"
+                  />
+                </label>
+                {audioFile && (
+                  <button
+                    type="button"
+                    onClick={() => setAudioFile(null)}
+                    className="text-xs text-rose-500 hover:underline px-1"
+                  >
+                    Quitar
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="relative flex py-1 items-center">
+            <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
+            <span className="flex-shrink mx-3 text-[10px] uppercase font-bold text-slate-400">O ingresa enlace</span>
+            <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
+          </div>
+
           <div className="grid sm:grid-cols-2 gap-3">
             <div>
               <label className={labelCls}>URL de audio/video directa</label>
               <input
                 type="text"
                 value={mediaUrl}
-                onChange={(e) => setMediaUrl(e.target.value)}
+                onChange={(e) => {
+                  setMediaUrl(e.target.value);
+                  if (e.target.value) setAudioFile(null);
+                }}
+                disabled={Boolean(audioFile)}
                 placeholder="https://…/sesion.mp4 · youtube.com/watch?v=…"
                 className={inputCls}
               />
@@ -352,41 +480,56 @@ export const AiWorkbench = () => {
               <input
                 type="text"
                 value={pageUrl}
-                onChange={(e) => setPageUrl(e.target.value)}
+                onChange={(e) => {
+                  setPageUrl(e.target.value);
+                  if (e.target.value) setAudioFile(null);
+                }}
+                disabled={Boolean(audioFile)}
                 placeholder="https://muni.gob.pe/sesiones (scraping)"
                 className={inputCls}
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className={labelCls}>Idioma</label>
               <input type="text" value={idioma} onChange={(e) => setIdioma(e.target.value)} className={inputCls} />
             </div>
             <div>
-              <label className={labelCls}>whisper</label>
-              <select value={whisperModel} onChange={(e) => setWhisperModel(e.target.value)} className={inputCls}>
-                {['tiny', 'base', 'small', 'medium'].map((m) => (
-                  <option key={m} value={m}>{m}</option>
-                ))}
+              <label className={labelCls}>Motor LLM Multimodal</label>
+              <select
+                value={transcriptionEngine}
+                onChange={(e) => setTranscriptionEngine(e.target.value)}
+                className={inputCls}
+              >
+                <option value="gemini-3.1-flash-lite">gemini-3.1-flash-lite (Google Gemini · Activo)</option>
+                <option value="gemini-3.8-flash">gemini-3.8-flash (Google Gemini)</option>
+                <option value="gemini-3.5-flash">gemini-3.5-flash (Google Gemini)</option>
+                <option value="gemini-flash-latest">gemini-flash-latest (Google Gemini)</option>
+                <option value="llama3.1:latest">llama3.1:latest (Ollama Local :11434)</option>
               </select>
             </div>
             <div className="flex items-end pb-1">
               <label className="flex items-center space-x-2 text-sm font-medium text-slate-700 dark:text-slate-300">
-                <input type="checkbox" checked={resumir} onChange={(e) => setResumir(e.target.checked)} className="w-4 h-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500" />
-                <span>Resumir con Ollama</span>
+                <input
+                  type="checkbox"
+                  checked={resumir}
+                  onChange={(e) => setResumir(e.target.checked)}
+                  className="w-4 h-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+                />
+                <span>Sintetizar puntos clave</span>
               </label>
             </div>
           </div>
 
           <div className="flex items-center justify-between">
             <BotonAccion onClick={handleTranscribe} loading={transcriptLoading} icon={FileAudio}>
-              Descargar y transcribir
+              Transcribir con Gemini Multimodal
             </BotonAccion>
             {transcript && !transcript.error && (
-              <span className="text-xs text-slate-500 dark:text-slate-400">
-                {whisperModel === 'base' ? 'faster-whisper (base)' : `faster-whisper (${whisperModel})`}
+              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                Motor: {transcriptionEngine}
               </span>
             )}
           </div>
@@ -521,7 +664,7 @@ export const AiWorkbench = () => {
               <div className="pt-2 space-y-4 border-t border-slate-100 dark:border-slate-800">
                 <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-4">
                   <div className="flex items-center space-x-2 text-xs font-semibold text-brand-600 dark:text-brand-400 uppercase tracking-wide mb-2">
-                    <Sparkles className="w-3.5 h-3.5" /> Conclusión del agente (Ollama)
+                    <Sparkles className="w-3.5 h-3.5" /> Conclusión del agente (Google Gemini / Ollama)
                   </div>
                   <p className="text-sm text-slate-700 dark:text-slate-200 whitespace-pre-wrap leading-relaxed">
                     {agentResult.respuesta}

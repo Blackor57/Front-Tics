@@ -15,6 +15,7 @@ import {
   Server,
   ShieldCheck,
   Mail,
+  Bot,
 } from 'lucide-react';
 
 export const Navbar = ({
@@ -49,8 +50,8 @@ export const Navbar = ({
                 <span className="font-extrabold text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-brand-600 to-indigo-600 dark:from-white dark:via-brand-300 dark:to-indigo-300">
                   SIMAP
                 </span>
-                <span className="hidden sm:inline-block px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase rounded-full bg-brand-100 dark:bg-brand-950/80 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800">
-                  v2.5 AI
+                <span className="hidden sm:inline-block px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                  Gemini 3.1
                 </span>
               </div>
               <p className="hidden md:block text-[11px] font-medium text-slate-500 dark:text-slate-400 -mt-0.5">
@@ -109,18 +110,6 @@ export const Navbar = ({
                 <span>Historial</span>
               </button>
             )}
-
-            <button
-              onClick={() => onSelectTab('ai')}
-              className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${
-                currentTab === 'ai'
-                  ? 'bg-brand-50 dark:bg-brand-950/70 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-800'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
-              }`}
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>Inteligencia AI</span>
-            </button>
           </nav>
 
           {/* Right Controls */}
@@ -328,21 +317,6 @@ export const Navbar = ({
               <span>Historial de Reportes</span>
             </button>
           )}
-
-          <button
-            onClick={() => {
-              onSelectTab('ai');
-              setMobileMenuOpen(false);
-            }}
-            className={`w-full flex items-center space-x-2 px-3 py-2 rounded-lg font-medium ${
-              currentTab === 'ai'
-                ? 'bg-brand-50 dark:bg-brand-950/70 text-brand-600 dark:text-brand-400'
-                : 'text-slate-700 dark:text-slate-300'
-            }`}
-          >
-            <Sparkles className="w-4 h-4" />
-            <span>Inteligencia AI (RAG · Whisper · Agente)</span>
-          </button>
 
           <div className="pt-2 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
             <button
