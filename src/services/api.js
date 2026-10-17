@@ -175,6 +175,28 @@ export const scrapingAPI = {
   },
 };
 
+// --- IMAGE VISUAL SEARCH API ---
+export const imageSearchAPI = {
+  /**
+   * Envía una imagen (File o Blob) al backend para búsqueda visual por similitud.
+   * El endpoint debe devolver un objeto con al menos uno de:
+   *   { url, result_url, similar_url, link }
+   *
+   * @param {File} imageFile - Imagen capturada por la cámara
+   * @returns {Promise<object>} Respuesta del backend
+   */
+  searchByImage: async (imageFile) => {
+    const formData = new FormData();
+    formData.append('image', imageFile, imageFile.name || 'capture.jpg');
+
+    const response = await api.post('/api/v1/image-search/search', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 60000, // 60 segundos para procesamiento de imagen
+    });
+    return response.data;
+  },
+};
+
 // --- HEALTH CHECK ---
 export const checkBackendHealth = async () => {
   try {

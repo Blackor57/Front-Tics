@@ -4,7 +4,9 @@ import {
   Sparkles,
   ArrowRight,
   Zap,
+  Camera,
 } from 'lucide-react';
+
 
 export const UrlInputSection = ({
   url,
@@ -15,6 +17,7 @@ export const UrlInputSection = ({
   setGenerarDocumentos,
   onAnalyze,
   onLoadSample,
+  onOpenCamera,
   isLoading,
 }) => {
 
@@ -63,11 +66,26 @@ export const UrlInputSection = ({
             />
           </div>
 
-          <div className="w-full sm:w-auto mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800">
+          <div className="w-full sm:w-auto mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800 flex items-center gap-2">
+            {/* Camera search button */}
+            <button
+              type="button"
+              id="camera-search-open-btn"
+              onClick={onOpenCamera}
+              disabled={isLoading}
+              title="Búsqueda visual por cámara"
+              className="relative flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed group overflow-hidden"
+            >
+              {/* Pulse ring */}
+              <span className="absolute inset-0 rounded-xl ring-2 ring-purple-400/30 group-hover:ring-purple-400/60 transition-all" />
+              <Camera className="w-5 h-5 relative z-10 group-hover:scale-110 transition-transform" />
+            </button>
+
+            {/* Analyze button */}
             <button
               type="submit"
               disabled={isLoading || !url.trim()}
-              className="w-full sm:w-auto flex items-center justify-center space-x-2 px-6 py-3 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-brand-600 via-indigo-600 to-brand-700 hover:from-brand-500 hover:to-indigo-500 shadow-md hover:shadow-glow-indigo transition-all disabled:opacity-50 disabled:cursor-not-allowed group cursor-pointer"
+              className="flex-1 sm:flex-none flex items-center justify-center space-x-2 px-6 py-3 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-brand-600 via-indigo-600 to-brand-700 hover:from-brand-500 hover:to-indigo-500 shadow-md hover:shadow-glow-indigo transition-all disabled:opacity-50 disabled:cursor-not-allowed group cursor-pointer"
             >
               <Zap className="w-4 h-4 group-hover:scale-110 transition-transform" />
               <span>Auditar con Inteligencia Artificial</span>

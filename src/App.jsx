@@ -12,6 +12,7 @@ import { VerificationBanner } from './components/auth/VerificationBanner';
 import { VerificationRequiredModal } from './components/auth/VerificationRequiredModal';
 import { ChatWidget } from './components/chat/ChatWidget';
 import { ChatbotAuditor } from './components/chat/ChatbotAuditor';
+import { CameraSearchModal } from './components/analyzer/CameraSearchModal';
 import { intelligenceAPI, authAPI, checkBackendHealth, getMockAnalyzeResponse } from './services/api';
 import { useAuth } from './context/AuthContext';
 import { useTheme } from './context/ThemeContext';
@@ -42,6 +43,7 @@ export const App = () => {
   const [verificationModalOpen, setVerificationModalOpen] = useState(false);
   const [trackingModalOpen, setTrackingModalOpen] = useState(false);
   const [trackingModalUrl, setTrackingModalUrl] = useState('');
+  const [cameraSearchOpen, setCameraSearchOpen] = useState(false);
 
   // Initial Backend Health Ping
   useEffect(() => {
@@ -201,6 +203,7 @@ export const App = () => {
               setGenerarDocumentos={setGenerarDocumentos}
               onAnalyze={handleAnalyze}
               onLoadSample={handleLoadSample}
+              onOpenCamera={() => setCameraSearchOpen(true)}
               isLoading={isAnalyzing}
             />
 
@@ -282,6 +285,12 @@ export const App = () => {
 
       {/* Chatbot RAG flotante (conecta a simap_chatbot_service :8501 vía SSE) */}
       <ChatWidget currentAnalysis={analyzeResult} />
+
+      {/* Camera Visual Search Modal */}
+      <CameraSearchModal
+        isOpen={cameraSearchOpen}
+        onClose={() => setCameraSearchOpen(false)}
+      />
     </div>
   );
 };
