@@ -97,6 +97,18 @@ export const Navbar = ({
               )}
             </button>
 
+            <button
+              onClick={() => onSelectTab('scanner')}
+              className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${
+                currentTab === 'scanner'
+                  ? 'bg-brand-50 dark:bg-brand-950/70 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-800'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
+              }`}
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>Escáner de Imágenes</span>
+            </button>
+
             {isAuthenticated && (
               <button
                 onClick={() => onSelectTab('reports')}

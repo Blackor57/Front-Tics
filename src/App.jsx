@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/layout/Navbar';
 import { UrlInputSection } from './components/analyzer/UrlInputSection';
+import { RpaExportPanel } from './components/analyzer/RpaExportPanel';
 import { LoadingPipeline } from './components/analyzer/LoadingPipeline';
 import { PreviewDashboard } from './components/analyzer/PreviewDashboard';
 import { TrackingView } from './components/tracking/TrackingView';
@@ -12,11 +13,14 @@ import { VerificationBanner } from './components/auth/VerificationBanner';
 import { VerificationRequiredModal } from './components/auth/VerificationRequiredModal';
 import { ChatWidget } from './components/chat/ChatWidget';
 import { ChatbotAuditor } from './components/chat/ChatbotAuditor';
-import { intelligenceAPI, authAPI, checkBackendHealth, getMockAnalyzeResponse } from './services/api';
+import { ImageScanner } from './components/vision/ImageScanner';
+import { intelligenceAPI, rpaAPI, authAPI, checkBackendHealth, getMockAnalyzeResponse } from './services/api';
 import { useAuth } from './context/AuthContext';
 import { useTheme } from './context/ThemeContext';
 import { Toaster, toast } from 'sonner';
 import { getChatSessionId, syncActiveContext } from './services/chat';
+
+const DEMO_RPA_URL = 'https://www.scrapethissite.com/pages/forms/';
 
 export const App = () => {
   const { user, isAuthenticated, markUserAsVerified } = useAuth();
@@ -30,11 +34,16 @@ export const App = () => {
   const [demoModeActive, setDemoActive] = useState(false);
 
   // Analyzer Form & Result State
-  const [url, setUrl] = useState('https://rpp.pe/politica-y-economia');
+  const [url, setUrl] = useState('https://rpp.pe/actualidad');
   const [guardarSnapshot, setGuardarSnapshot] = useState(true);
   const [generarDocumentos, setGenerarDocumentos] = useState(true);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analyzeResult, setAnalyzeResult] = useState(null);
+
+  // RPA Export State
+  const [isRpaRunning, setIsRpaRunning] = useState(false);
+  const [rpaResult, setRpaResult] = useState(null);
+  const [rpaError, setRpaError] = useState('');
 
   // Modals State
   const [authModalOpen, setAuthModalOpen] = useState(false);
@@ -115,6 +124,11 @@ export const App = () => {
         toast.success('Auditoría en vivo finalizada', {
           description: `Análisis procesado con Google Gemini 3.1 Flash Lite / Ollama para ${response.sitio_titulo || url}`,
         });
+        if (response.correo_enviado) {
+          toast.success('Reporte Excel enviado por correo', {
+            description: `Destinatario: ${response.correo_destino}`,
+          });
+        }
       }
     } catch (error) {
       console.error('Error during analysis:', error);
@@ -131,10 +145,52 @@ export const App = () => {
     }
   };
 
+  // Execute RPA extraction (URL -> Excel)
+  const handleRpaExtract = async (targetUrl) => {
+    const sourceUrl = (typeof targetUrl === 'string' ? targetUrl : url).trim();
+    if (!sourceUrl || isRpaRunning) return;
+
+    setIsRpaRunning(true);
+    setRpaError('');
+    setRpaResult(null);
+
+    try {
+      const response = await rpaAPI.extract({ url: sourceUrl });
+      setRpaResult(response);
+      toast.success('Excel RPA generado correctamente', {
+        description:
+          response?.mensaje ||
+          `Se extrajeron ${response?.total_registros || 0} registros.`,
+      });
+      if (response?.correo_enviado) {
+        toast.success('Excel enviado a tu correo registrado', {
+          description: `Destinatario: ${response.correo_destino}`,
+        });
+      } else if (isAuthenticated) {
+        toast.info('No se pudo enviar el correo', {
+          description: 'Descarga el Excel manualmente o revisa la configuración SMTP.',
+        });
+      }
+    } catch (error) {
+      const detail =
+        error.response?.data?.detail ||
+        'No se pudo completar la extracción RPA. Verifica que el backend esté activo y la URL sea accesible.';
+      setRpaError(detail);
+      toast.error('Error en la automatización RPA', { description: detail });
+    } finally {
+      setIsRpaRunning(false);
+    }
+  };
+
+  const handleRpaDemo = () => {
+    setUrl(DEMO_RPA_URL);
+    handleRpaExtract(DEMO_RPA_URL);
+  };
+
   // Load sample immediately
   const handleLoadSample = () => {
-    const sample = getMockAnalyzeResponse('https://rpp.pe/politica-y-economia');
-    setUrl('https://rpp.pe/politica-y-economia');
+    const sample = getMockAnalyzeResponse('https://rpp.pe/actualidad');
+    setUrl('https://rpp.pe/actualidad');
     setAnalyzeResult(sample);
     syncActiveContext(getChatSessionId(), sample);
     toast.info('Auditoría de muestra cargada', {
@@ -214,6 +270,16 @@ export const App = () => {
                 onOpenTracking={handleOpenTracking}
               />
             )}
+
+            {/* RPA Automation: URL -> Excel */}
+            <RpaExportPanel
+              url={url}
+              result={rpaResult}
+              isLoading={isRpaRunning}
+              error={rpaError}
+              onExtract={() => handleRpaExtract()}
+              onUseDemo={handleRpaDemo}
+            />
           </div>
         )}
 
@@ -232,7 +298,12 @@ export const App = () => {
           />
         )}
 
-        {/* TAB 3: REPORT HISTORY */}
+        {/* TAB 3: ESCÁNER DE IMÁGENES */}
+        {currentTab === 'scanner' && (
+          <ImageScanner />
+        )}
+
+        {/* TAB 4: REPORT HISTORY */}
         {currentTab === 'reports' && isAuthenticated && (
           <ReportsHistoryView demoMode={demoModeActive} />
         )}

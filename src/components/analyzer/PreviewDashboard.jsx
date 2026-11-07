@@ -28,7 +28,7 @@ import {
   PieChart,
   Pie,
 } from 'recharts';
-import { reportsAPI } from '../../services/api';
+import { downloadFromUrl } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'sonner';
 
@@ -42,12 +42,15 @@ export const PreviewDashboard = ({
     sitio_titulo,
     created_at,
     total_items,
-    analisis_ia,
+    analisis_ia: analisisRaw,
     delta,
     descargas,
     snapshot_id,
     es_linea_base,
   } = data;
+
+  const analisis_ia = analisisRaw || {};
+  const sentimientos = analisis_ia.sentimientos || { positivo: 0, neutro: 0, negativo: 0 };
 
   const [tableTab, setTableTab] = useState('new');
   const [searchTerm, setSearchTerm] = useState('');
@@ -89,14 +92,14 @@ export const PreviewDashboard = ({
 
   // Sentiment chart data
   const sentimentData = [
-    { name: 'Positivo', value: analisis_ia.sentimientos.positivo, color: '#10b981' },
-    { name: 'Neutro', value: analisis_ia.sentimientos.neutro, color: '#64748b' },
-    { name: 'Negativo', value: analisis_ia.sentimientos.negativo, color: '#f43f5e' },
+    { name: 'Positivo', value: sentimientos.positivo ?? 0, color: '#10b981' },
+    { name: 'Neutro', value: sentimientos.neutro ?? 0, color: '#64748b' },
+    { name: 'Negativo', value: sentimientos.negativo ?? 0, color: '#f43f5e' },
   ];
 
   // Category chart data sorted descending
   const categoryData = useMemo(() => {
-    return [...analisis_ia.categorias]
+    return [...(analisis_ia.categorias || [])]
       .sort((a, b) => b.cantidad - a.cantidad)
       .slice(0, 6);
   }, [analisis_ia.categorias]);
@@ -144,32 +147,40 @@ export const PreviewDashboard = ({
     return items;
   }, [delta, tableTab, searchTerm]);
 
-  // Handle downloads
-  const handleDownloadWord = () => {
-    if (descargas.word) {
-      const fullUrl = descargas.word.startsWith('http')
-        ? descargas.word
-        : reportsAPI.getWordDownloadUrl(snapshot_id || 'latest');
-      window.open(fullUrl, '_blank');
-      toast.success('Iniciando descarga de Informe Word (.docx)', {
+  // Handle downloads via browser (blob + <a download>)
+  const handleDownloadWord = async () => {
+    if (!descargas?.word) {
+      toast.error('Enlace de descarga de Word no disponible para este análisis.');
+      return;
+    }
+
+    try {
+      await downloadFromUrl(descargas.word, `informe_${snapshot_id || 'auditoria'}.docx`);
+      toast.success('Informe Word (.docx) descargado', {
         description: 'El archivo contiene el resumen ejecutivo y matrices estructuradas.',
       });
-    } else {
-      toast.error('Enlace de descarga de Word no disponible para este análisis.');
+    } catch {
+      toast.error('No se pudo descargar el Informe Word', {
+        description: 'El archivo ya no está disponible en el servidor. Vuelve a ejecutar la auditoría.',
+      });
     }
   };
 
-  const handleDownloadExcel = () => {
-    if (descargas.excel) {
-      const fullUrl = descargas.excel.startsWith('http')
-        ? descargas.excel
-        : reportsAPI.getExcelDownloadUrl(snapshot_id || 'latest');
-      window.open(fullUrl, '_blank');
-      toast.success('Iniciando descarga de Libro Excel (.xlsx)', {
+  const handleDownloadExcel = async () => {
+    if (!descargas?.excel) {
+      toast.error('Enlace de descarga de Excel no disponible para este análisis.');
+      return;
+    }
+
+    try {
+      await downloadFromUrl(descargas.excel, `auditoria_${snapshot_id || 'reporte'}.xlsx`);
+      toast.success('Libro Excel (.xlsx) descargado', {
         description: 'Incluye el desglose de artículos, categorías y métricas delta.',
       });
-    } else {
-      toast.error('Enlace de descarga de Excel no disponible para este análisis.');
+    } catch {
+      toast.error('No se pudo descargar el Libro Excel', {
+        description: 'El archivo ya no está disponible en el servidor. Vuelve a ejecutar la auditoría.',
+      });
     }
   };
 
@@ -513,7 +524,7 @@ export const PreviewDashboard = ({
                   </span>
                 </div>
                 <span className="font-mono text-sm font-bold text-emerald-600 dark:text-emerald-400">
-                  {analisis_ia.sentimientos.positivo}%
+                  {sentimientos.positivo}%
                 </span>
               </div>
 
@@ -525,7 +536,7 @@ export const PreviewDashboard = ({
                   </span>
                 </div>
                 <span className="font-mono text-sm font-bold text-slate-600 dark:text-slate-300">
-                  {analisis_ia.sentimientos.neutro}%
+                  {sentimientos.neutro}%
                 </span>
               </div>
 
@@ -537,7 +548,7 @@ export const PreviewDashboard = ({
                   </span>
                 </div>
                 <span className="font-mono text-sm font-bold text-rose-600 dark:text-rose-400">
-                  {analisis_ia.sentimientos.negativo}%
+                  {sentimientos.negativo}%
                 </span>
               </div>
             </div>

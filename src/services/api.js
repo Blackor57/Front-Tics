@@ -34,6 +34,38 @@ api.interceptors.response.use(
   }
 );
 
+// Descarga un archivo del backend usando el navegador (blob + <a download>).
+// Evita que el navegador bloquee la descarga cuando se usa window.open.
+export const downloadFromUrl = async (pathOrUrl, fallbackName = 'reporte') => {
+  if (!pathOrUrl) throw new Error('Enlace de descarga no disponible.');
+
+  const fullUrl = /^https?:\/\//i.test(pathOrUrl)
+    ? pathOrUrl
+    : `${API_BASE_URL}${pathOrUrl.startsWith('/') ? '' : '/'}${pathOrUrl}`;
+
+  const response = await api.get(fullUrl, { responseType: 'blob' });
+  const disposition = response.headers?.['content-disposition'] || '';
+  const utf8Match = /filename\*=UTF-8''([^;]+)/i.exec(disposition);
+  const plainMatch = /filename="?([^";]+)"?/i.exec(disposition);
+  const filename = utf8Match
+    ? decodeURIComponent(utf8Match[1].trim())
+    : plainMatch
+      ? plainMatch[1].trim().replace(/^"|"$/g, '')
+      : fallbackName;
+
+  const blobUrl = URL.createObjectURL(response.data);
+  const link = document.createElement('a');
+  link.href = blobUrl;
+  link.download = filename;
+  link.style.display = 'none';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(blobUrl), 1500);
+
+  return filename;
+};
+
 // --- AUTH API ---
 export const authAPI = {
   login: async (payload) => {
@@ -92,12 +124,31 @@ export const intelligenceAPI = {
         url: payload.url,
         guardar_snapshot: payload.guardar_snapshot ?? true,
         generar_documentos: payload.generar_documentos ?? true,
+        session_id: payload.session_id,
       },
       {
         timeout: 180000, // 180 segundos (3 minutos) para scraping e inferencia LLM
       }
     );
     return response.data;
+  },
+};
+
+// --- RPA / AUTOMATIZACIÓN API ---
+export const rpaAPI = {
+  extract: async ({ url, limite = 40, max_paginas = 2, verificar = true }) => {
+    const response = await api.post(
+      '/api/v1/rpa/extract',
+      { url, limite, max_paginas, verificar },
+      { timeout: 180000 }
+    );
+    return response.data;
+  },
+
+  getDownloadUrl: (pathOrUrl) => {
+    if (!pathOrUrl) return null;
+    if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl;
+    return `${API_BASE_URL}${pathOrUrl.startsWith('/') ? '' : '/'}${pathOrUrl}`;
   },
 };
 
@@ -390,3 +441,26 @@ export const getMockReports = () => [
 ];
 
 export default api;
+
+
+// Vision API - An�lisis de imagen con Gemini
+export const visionAPI = {
+  analyzeImage: async (file, prompt = null) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    if (prompt) formData.append('prompt', prompt);
+    const response = await api.post('/api/v1/vision/analyze-image', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 120000,
+    });
+    return response.data;
+  },
+  analyzeBase64: async (base64Data, mimeType = 'image/jpeg', prompt = null) => {
+    const response = await api.post('/api/v1/vision/analyze-base64', {
+      image: base64Data,
+      mimeType,
+      prompt,
+    }, { timeout: 120000 });
+    return response.data;
+  },
+};

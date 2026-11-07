@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { reportsAPI, getMockReports } from '../../services/api';
+import { reportsAPI, getMockReports, downloadFromUrl } from '../../services/api';
 import {
   FileText,
   FileSpreadsheet,
@@ -45,16 +45,28 @@ export const ReportsHistoryView = ({ demoMode }) => {
       rep.resumen_ejecutivo.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleDownloadWord = (reportId) => {
-    const url = reportsAPI.getWordDownloadUrl(reportId);
-    window.open(url, '_blank');
-    toast.success(`Descargando informe Word para el reporte #${reportId}`);
+  const handleDownloadWord = async (reportId) => {
+    try {
+      await downloadFromUrl(
+        reportsAPI.getWordDownloadUrl(reportId),
+        `informe_reporte_${reportId}.docx`
+      );
+      toast.success(`Informe Word descargado para el reporte #${reportId}`);
+    } catch {
+      toast.error(`No se pudo descargar el informe Word del reporte #${reportId}`);
+    }
   };
 
-  const handleDownloadExcel = (reportId) => {
-    const url = reportsAPI.getExcelDownloadUrl(reportId);
-    window.open(url, '_blank');
-    toast.success(`Descargando libro Excel para el reporte #${reportId}`);
+  const handleDownloadExcel = async (reportId) => {
+    try {
+      await downloadFromUrl(
+        reportsAPI.getExcelDownloadUrl(reportId),
+        `reporte_${reportId}.xlsx`
+      );
+      toast.success(`Libro Excel descargado para el reporte #${reportId}`);
+    } catch {
+      toast.error(`No se pudo descargar el libro Excel del reporte #${reportId}`);
+    }
   };
 
   if (!isAuthenticated) {

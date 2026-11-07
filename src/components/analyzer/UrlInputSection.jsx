@@ -19,8 +19,9 @@ export const UrlInputSection = ({
 }) => {
 
   const presetUrls = [
-    { label: 'RPP Noticias', url: 'https://rpp.pe/politica-y-economia' },
+    { label: 'RPP Noticias', url: 'https://rpp.pe/actualidad' },
     { label: 'El Comercio Economía', url: 'https://elcomercio.pe/economia' },
+    { label: 'Demo RPA · Hockey', url: 'https://www.scrapethissite.com/pages/forms/' },
   ];
 
   const handleSubmit = (e) => {
@@ -58,7 +59,7 @@ export const UrlInputSection = ({
               disabled={isLoading}
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder="Pega cualquier URL pública (ej. https://rpp.pe/politica-y-economia)..."
+              placeholder="Pega cualquier URL pública (ej. https://rpp.pe/actualidad)..."
               className="w-full text-sm sm:text-base bg-transparent border-0 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-0"
             />
           </div>
